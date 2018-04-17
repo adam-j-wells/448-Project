@@ -28,8 +28,15 @@ Raw Data Format:
         - last_size
         - last_SRO
 '''
-data_dir = '../ProjectData/'
 
+data_dir = '../../ProjectData/'
+
+
+def calculateImbalance(data):
+    '''
+    Calulate Order Book imbalance
+    '''
+    pass
 
 def createFeatures(data_path, out_path):
     '''
@@ -41,4 +48,5 @@ def createFeatures(data_path, out_path):
     Output:
         - featureMatrix: data frame containing original data and features
     '''
-    pass
+    data = pd.read_csv(data_path)
+    data = calculateImbalance(data)
