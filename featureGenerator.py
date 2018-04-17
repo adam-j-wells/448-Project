@@ -9,12 +9,24 @@ import pandas as pd
 import numpy as np
 
 '''
-Local path containing data
 Raw Data Format:
-columns:
-    - datetime (YYYY-MM-DD H:M:S)
-    - bid{n} n=1:10
-    - ask{n} n=1:10
+    columns (n=1:10):
+        - datetime (YYYY-MM-DD H:M:S)
+        - bid{n}
+        - ask{n}
+        - bsize{n}
+        - asize{n}
+        - bnum{n}
+        - anum{n}
+        - vwap
+        - notional
+        - volumne
+        - last_price
+        - mid
+        - spread
+        - wmid
+        - last_size
+        - last_SRO
 '''
 data_dir = '../ProjectData/'
 
