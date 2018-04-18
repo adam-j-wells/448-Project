@@ -32,14 +32,19 @@ Raw Data Format:
 data_dir = '../../ProjectData/'
 
 
-def createResponseVariable(data):
+def createResponseVariable(data, response_type = 'Classification'):
     '''
     Generates response variable for raw input data.
-    Response variable will be mid price of next tick order book
+    Response variable will be:
+        - mid price of next tick order book (response_type = 'Regression')
+        - Up , Down, No Change (response_type = 'Classification')
     '''
-    response_col = [data.loc[i+1, 'direct.mid'] for i in range(len(data)-1)]
-    data = data[:-1] # get rid of last row, which won't have a response variable
-    data['Response'] = response_col
+    if response_type.upper() == 'REGRESSION':
+        response_col = [data.loc[i+1, 'direct.mid'] for i in range(len(data)-1)]
+        data = data[:-1] # get rid of last row, which won't have a response variable
+        data['Response'] = response_col
+    elif response_type.upper() == 'CLASSIFICATION':
+        pass
     return data
 
 def calculateImbalance(data):
