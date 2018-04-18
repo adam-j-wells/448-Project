@@ -20,7 +20,7 @@ Raw Data Format:
         - anum{n}
         - vwap
         - notional
-        - volumne
+        - volume
         - last_price
         - mid
         - spread
@@ -31,6 +31,16 @@ Raw Data Format:
 
 data_dir = '../../ProjectData/'
 
+
+def createResponseVariable(data):
+    '''
+    Generates response variable for raw input data.
+    Response variable will be mid price of next tick order book
+    '''
+    response_col = [data.loc[i+1, 'direct.mid'] for i in range(len(data)-1)]
+    data = data[:-1] # get rid of last row, which won't have a response variable
+    data['Response'] = response_col
+    return data
 
 def calculateImbalance(data):
     '''
@@ -49,4 +59,6 @@ def createFeatures(data_path, out_path):
         - featureMatrix: data frame containing original data and features
     '''
     data = pd.read_csv(data_path)
-    data = calculateImbalance(data)
+    #data = calculateImbalance(data)
+    data = createResponseVariable(data)
+    data.to_csv(out_path, index = False)
