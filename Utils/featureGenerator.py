@@ -41,10 +41,22 @@ def createResponseVariable(data, response_type = 'Classification'):
     '''
     if response_type.upper() == 'REGRESSION':
         response_col = [data.loc[i+1, 'direct.mid'] for i in range(len(data)-1)]
-        data = data[:-1] # get rid of last row, which won't have a response variable
-        data['Response'] = response_col
+
     elif response_type.upper() == 'CLASSIFICATION':
-        pass
+        response_col = []
+        for i in range(len(data)-1):
+            current_price = data.loc[i, 'direct.mid']
+            next_price = data.loc[i+1, 'direct.mid']
+            diff = next_price - current_price
+            if diff == 0:
+                response_col.append(0)
+            elif diff > 0:
+                response_col.append(1)
+            elif diff < 0:
+                response_col.append(2)
+
+    data = data[:-1] # get rid of last row, which won't have a response variable
+    data['Response'] = response_col
     return data
 
 def calculateImbalance(data):
@@ -53,7 +65,7 @@ def calculateImbalance(data):
     '''
     pass
 
-def createFeatures(data_path, out_path):
+def createFeatures(data_path, out_path, response_type):
     '''
     Generates features from Order Book Data
 
@@ -65,5 +77,5 @@ def createFeatures(data_path, out_path):
     '''
     data = pd.read_csv(data_path)
     #data = calculateImbalance(data)
-    data = createResponseVariable(data)
+    data = createResponseVariable(data, response_type)
     data.to_csv(out_path, index = False)
