@@ -24,9 +24,12 @@ class OrderBookLSTM:
     def createLSTM(self):
         print('Building model...')
         model = Sequential()
-        model.add(LSTM(self.layer_neurons, input_shape=self.input_shape, return_sequences=False))
+        model.add(LSTM(self.layer_neurons, input_shape=self.input_shape, return_sequences=True))
         for i in range(self.num_hidden_layers):
-            model.add(LSTM(self.layer_neurons, return_sequences=False))
+            if i == self.num_hidden_layers-1:
+                model.add(LSTM(self.layer_neurons, return_sequences=False))
+            else:
+                model.add(LSTM(self.layer_neurons, return_sequences=True))
 
         if self.dropout is not None:
             model.add(Dropout(self.dropout))

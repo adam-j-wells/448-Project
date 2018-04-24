@@ -7,7 +7,8 @@ Data format:
 '''
 import pandas as pd
 import numpy as np
-
+import os
+import sys
 '''
 Raw Data Format:
     columns (n=1:10):
@@ -31,6 +32,23 @@ Raw Data Format:
 
 data_dir = '../../ProjectData/'
 
+
+def mergeOrderBookDays(data_dir, out_path, prefixes):
+    '''
+    Raw data is separated into files by date (e.g. msft-20170417)
+    Merge files with the same prefix (ticker) by day
+    '''
+    files = os.listdir(data_dir)
+
+    for prefix in prefixes:
+        data = pd.DataFrame()
+        fnames = [f for f in files if (str(f).startswith(prefix) and str(f).endswith('orderbook.csv'))]
+        print(fnames)
+        for f in fnames:
+            print(data_dir + str(f))
+            data = data.append(pd.read_csv(data_dir + str(f)))
+        data.to_csv(out_path, index = False)
+    #return data
 
 def createResponseVariable(data, response_type = 'Classification'):
     '''
@@ -65,6 +83,64 @@ def calculateImbalance(data):
     '''
     pass
 
+def calculateMeanPricesAndVolumes(data):
+    '''
+    Mean Bid/Ask, Prices/Volumes
+    sum(Price_i)/n
+    '''
+    data['meanBid'] = 'NA'
+    bid_col_list = ['direct.bid{}'.format(i) for i in range(1,11)]
+    print(bid_col_list)
+    #for i in range(len(data)):
+    data['meanBid'] = data[bid_col_list].sum(axis=1)
+
+    data['meanAsk'] = 'NA'
+    ask_col_list = ['direct.ask{}'.format(i) for i in range(1,11)]
+    #for i in range(len(data)):
+    data['meanAsk'] = data[ask_col_list].sum(axis=1)
+
+    data['meanBidNum'] = 'NA'
+    bidNum_col_list = ['direct.bnum{}'.format(i) for i in range(1,11)]
+    #for i in range(len(data)):
+    data['meanBidNum'] = data[bidNum_col_list].sum(axis=1)
+
+    data['meanAskNum'] = 'NA'
+    askNum_col_list = ['direct.anum{}'.format(i) for i in range(1,11)]
+    #for i in range(len(data)):
+    data['meanAskNum'] = data[askNum_col_list].sum(axis=1)
+
+    var_cols = bid_col_list + ask_col_list + bidNum_col_list + askNum_col_list
+    var_cols += ['meanBid', 'meanAsk', 'meanBidNum', 'meanAskNum']
+    return data, var_cols
+
+def calculateSpreadsAndMidPrices(data):
+    '''
+    bid-ask spreads and mid-prices
+
+    P_ask - P_bid{i=1,...,n}
+    P_ask + P_bid{i=1,...,n}
+    '''
+    # calculate spreads
+    for i in range(1,11):
+        #data['spread_{}'.format(i)] = 'NA'
+        #bid = data.loc[i, 'direct.bid{}'.format(i)]
+        #ask = data.loc[j, 'direct.ask{}'.format(i)]
+        spread = [data.loc[j, 'direct.ask{}'.format(i)] - data.loc[j, 'direct.bid{}'.format(i)] for j in range(len(data))]
+        data['spread_{}'.format(i)] = spread
+
+    # calculate mid prices
+    for i in range(1,11):
+        #data['midPrice_{}'.format(i)] = 'NA'
+        #bid = data.loc[j, 'direct.bid{}'.format(i)]
+        #ask = data.loc[j, 'direct.ask{}'.format(i)]
+        midPrice = [(data.loc[j, 'direct.ask{}'.format(i)] + data.loc[j, 'direct.bid{}'.format(i)])/2 for j in range(len(data))]
+        data['midPrice_{}'.format(i)] = midPrice
+
+    var_cols_spread = ['spread_{}'.format(i) for i in range(1,11)]
+    var_cols_mp = ['midPrice_{}'.format(i) for i in range(1,11)]
+    var_cols = var_cols_spread + var_cols_mp
+    return data, var_cols
+
 def createFeatures(data_path, out_path, response_type):
     '''
     Generates features from Order Book Data
@@ -75,7 +151,14 @@ def createFeatures(data_path, out_path, response_type):
     Output:
         - featureMatrix: data frame containing original data and features
     '''
+
     data = pd.read_csv(data_path)
+    data, meanPriceVol_vars = calculateMeanPricesAndVolumes(data)
+
+    data, spreadMidPrice_vars = calculateSpreadsAndMidPrices(data)
     #data = calculateImbalance(data)
     data = createResponseVariable(data, response_type)
+
+    feature_vars = meanPriceVol_vars + spreadMidPrice_vars + ['Response']
+    data = data[feature_vars]
     data.to_csv(out_path, index = False)
